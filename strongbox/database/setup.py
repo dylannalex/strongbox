@@ -11,6 +11,7 @@ def create_tables(db):
   mail VARCHAR(30),
   password VARCHAR(100),
   vault_id SMALLINT UNSIGNED,
+  account_id SMALLINT UNSIGNED,
   PRIMARY KEY (name, username, mail)
 )"""
     )
