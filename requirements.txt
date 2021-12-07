@@ -1,0 +1,7 @@
+cffi==1.15.0
+cryptography==36.0.0
+mysql-connector-python==8.0.27
+prettytable==2.4.0
+protobuf==3.19.1
+pycparser==2.21
+wcwidth==0.2.5
