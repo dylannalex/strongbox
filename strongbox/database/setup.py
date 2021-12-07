@@ -8,8 +8,8 @@ def create_tables(db):
         f"""CREATE TABLE {ACCOUNT_TABLE}(
   name VARCHAR(25),
   username VARCHAR(30),
-  mail VARCHAR(30),
-  password VARCHAR(100),
+  mail VARCHAR(50),
+  password VARCHAR(600),
   vault_id SMALLINT UNSIGNED,
   account_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (account_id)
