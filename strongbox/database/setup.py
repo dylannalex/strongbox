@@ -7,20 +7,21 @@ def create_tables(db):
     cursor.execute(
         f"""CREATE TABLE {ACCOUNT_TABLE}(
   name VARCHAR(25),
-  username SMALLINT UNSIGNED,
+  username VARCHAR(30),
   mail VARCHAR(30),
   password VARCHAR(100),
   vault_id SMALLINT UNSIGNED,
-  account_id SMALLINT UNSIGNED,
-  PRIMARY KEY (name, username, mail)
-)"""
+  account_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (account_id)
+);"""
     )
     # Create vault table:
     cursor.execute(
         f"""CREATE TABLE {VAULT_TABLE}(
-hashed_password VARCHAR(64),
-id SMALLINT UNSIGNED NOT NULL,
-PRIMARY KEY (id, hashed_password)
-)"""
+hashed_password VARCHAR(64) UNIQUE,
+salt VARCHAR(16),
+id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+PRIMARY KEY (id)
+);"""
     )
     db.commit()

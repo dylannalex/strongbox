@@ -26,10 +26,9 @@ def save_account(
 ):
     if not username:
         username = "Null"
-    account_id = get_total_accounts(db, vault_id)
     cursor = db.cursor()
     cursor.execute(
-        f"INSERT INTO {ACCOUNT_TABLE} VALUES ('{name}', '{username}', '{mail}', '{encrypted_password}', '{vault_id}', '{account_id}');"
+        f"INSERT INTO {ACCOUNT_TABLE} VALUES ('{name}', '{username}', '{mail}', '{encrypted_password}', '{vault_id}', 0);"
     )
     db.commit()
 
@@ -64,14 +63,10 @@ def get_total_accounts(db: CMySQLConnection, vault_id: int):
     return len(retrieve_all_accounts(db, vault_id))
 
 
-def save_vault(
-    db: CMySQLConnection,
-    encrypted_password: str,
-    vault_id: int,
-):
+def save_vault(db: CMySQLConnection, encrypted_password: str, salt: str):
     cursor = db.cursor()
     cursor.execute(
-        f"INSERT INTO {VAULT_TABLE} VALUES ('{encrypted_password}', '{vault_id}');"
+        f"INSERT INTO {VAULT_TABLE} VALUES ('{encrypted_password}', '{salt}', 0);"
     )
     db.commit()
 
