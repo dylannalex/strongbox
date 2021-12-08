@@ -77,6 +77,22 @@ def retrieve_vaults(db: CMySQLConnection):
     return tuple([account for account in cursor])
 
 
+def retrieve_vault_salt_and_id(
+    db: CMySQLConnection, hashed_password: str
+) -> tuple[str, int]:
+    """
+    Returns the salt and id of a vault given it's password.
+
+    get_vault_salt_and_id(db, "vault1_password")
+    >>> ("vault1_salt", vault1_id)
+    """
+    for vault in retrieve_vaults(db):
+        if vault[0] == hashed_password:
+            return vault[1], vault[2]
+    else:
+        return (None, None)
+
+
 def delete_vault(db: CMySQLConnection, vault_id: int):
     cursor = db.cursor()
     cursor.execute(f"DELETE FROM {VAULT_TABLE} WHERE id='{vault_id}';")
