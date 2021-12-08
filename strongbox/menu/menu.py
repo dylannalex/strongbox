@@ -1,31 +1,51 @@
-from os import system, urandom
-from typing import Union
+from os import system
 from prettytable import PrettyTable
-from cryptography.fernet import Fernet
 from strongbox import encryption
 from strongbox.database import database
 from strongbox.menu import settings
 from strongbox.menu import style
 from strongbox.validation import verifier
 from strongbox.validation import checker
+from strongbox.database import manager
 
 
-def create_vault(password) -> bool:
+### Functions to get user confirmation:
+def confirm_task(confirmation_message: str) -> bool:
     while True:
         system("cls")
         print(style.TITLE)
-        create_vault = (
-            input(
-                f"No vault with password '{password}' found. Create new vault? (y/n): "
-            )
-            .strip()
-            .lower()
-        )
-        if create_vault == "y":
+        confirmation = input(f" {confirmation_message} (y/n): ").strip().lower()
+        if confirmation == "y":
             return True
-
-        if create_vault == "n":
+        if confirmation == "n":
             return False
+
+
+def confirm_vault_creation(password) -> bool:
+    return confirm_task(f"No vault with password '{password}' found. Create new vault?")
+
+
+def confirm_vault_deletion(db, vault_id):
+    vault_accounts = database.retrieve_all_accounts(db, vault_id)
+    return confirm_task(
+        f"Are you sure you want to delete vault with {len(vault_accounts)} accounts?"
+    )
+
+
+def confirm_account_deletion(account_id):
+    return confirm_task(
+        f"Are you sure you want to delete account with id={account_id}?"
+    )
+
+
+### Functions to get user input (password, option, account, account id):
+def get_account_id() -> None:
+    system("cls")
+    print(style.TITLE)
+    id = input(" Enter account id: ").strip()
+    if not verifier.valid_int(id):
+        raise ValueError(f"Invalid id: '{id}'")
+    return int(id)
 
 
 def get_vault_password() -> None:
@@ -56,6 +76,7 @@ def get_account() -> str:
     return name, mail, username, password1
 
 
+### Functions to display information on screen:
 def show_accounts(fernet, accounts) -> None:
     accounts_table = PrettyTable()
     accounts_table.field_names = [
@@ -100,76 +121,7 @@ def display_message(msg: str) -> None:
     wait()
 
 
-def delete_vault(db) -> None:
-    password = get_vault_password()
-    encrypted_password = encryption.generate_hash(password)
-    vaults = database.retrieve_vaults(db)
-    for vault in vaults:
-        if vault[0] == encrypted_password:
-            vault_id = vault[2]
-            break
-    else:
-        raise ValueError("Invalid vault password")
-
-    system("cls")
-    vault_accounts = database.retrieve_all_accounts(db, vault_id)
-    confirmation = (
-        input(
-            f" Are you sure you want to delete vault with {len(vault_accounts)} accounts? (y/n): "
-        )
-        .strip()
-        .lower()
-    )
-    if confirmation == "y":
-        database.delete_vault(db, vault_id)
-        for account in vault_accounts:
-            database.delete_account(db, account[-1])
-
-
-def find_vault_values(db, hashed_password):
-    for vault in database.retrieve_vaults(db):
-        if vault[0] == hashed_password:
-            return vault[1], vault[2]
-    else:
-        return (None, None)
-
-
-def get_vault(db) -> Union[tuple[str, str, int], None]:
-    password = get_vault_password()
-    hashed_password = encryption.generate_hash(password)
-    # Check if vault exist:
-    vault_salt, vault_id = find_vault_values(db, hashed_password)
-    if vault_id:
-        encoded_salt = encryption.encode_salt(vault_salt)
-        return encryption.generate_key(password, encoded_salt), vault_id
-
-    # Password did not match any vault:
-    if create_vault(password):
-        encoded_salt = urandom(16)
-        decoded_salt = encryption.decode_salt(encoded_salt)
-        database.save_vault(db, hashed_password, decoded_salt)
-        vault_id = find_vault_values(db, hashed_password)[1]
-        return encryption.generate_key(password, encoded_salt), vault_id
-    else:
-        raise Exception("Action canceled")
-
-
-def delete_account(db) -> None:
-    while True:
-        system("cls")
-        account_id = input(" Enter account id: ")
-        if verifier.valid_int(account_id):
-            break
-
-    confirmation = (
-        input(f" Are you sure you want to delete account with id={account_id}? (y/n): ")
-        .strip()
-        .lower()
-    )
-    if confirmation:
-        database.delete_account(db, account_id)
-
-
+### Menus:
 def vault_menu(db, fernet, vault_id) -> None:
     while True:
         try:
@@ -180,16 +132,29 @@ def vault_menu(db, fernet, vault_id) -> None:
                 database.save_account(
                     db, name, mail, username, encrypted_password, vault_id
                 )
-            if option == 2:
+
+            elif option == 2:
+                system("cls")
+                print(style.TITLE)
                 name = input(" Enter website/app name: ").strip().lower()
                 accounts = database.retrieve_accounts(db, name, vault_id)
                 show_accounts(fernet, accounts)
-            if option == 3:
+
+            elif option == 3:
                 accounts = database.retrieve_all_accounts(db, vault_id)
                 show_accounts(fernet, accounts)
-            if option == 4:
-                delete_account(db)
-            if option == 5:
+
+            elif option == 4:
+                account_id = get_account_id()
+                if not manager.is_valid_account_id(db, vault_id, account_id):
+                    raise ValueError(f"Account with id={account_id} was not found")
+                if not confirm_account_deletion(account_id):
+                    raise Exception(
+                        f"Account with id={account_id} deletion cancelled by user"
+                    )
+                database.delete_account(db, account_id)
+
+            elif option == 5:
                 return
 
         except Exception as error:
@@ -200,11 +165,27 @@ def main_menu():
     db = database.connect_to_database()
     option = get_option(style.MAIN_OPTIONS, settings.VALID_MAIN_OPTIONS)
     if option == 1:
-        system("cls")
-        key, vault_id = get_vault(db)
-        fernet = Fernet(key)
+        vault_password = get_vault_password()
+        if not manager.is_valid_vault_password(db, vault_password):
+            if not confirm_vault_creation(vault_password):
+                return
+            manager.create_vault(db, vault_password)
+        vault_id, fernet = manager.connect_to_vault(db, vault_password)
         vault_menu(db, fernet, vault_id)
-    if option == 2:
+
+    elif option == 2:
         show_vaults(db, database.retrieve_vaults(db))
-    if option == 3:
-        delete_vault(db)
+
+    elif option == 3:
+        vault_password = get_vault_password()
+        if not manager.is_valid_vault_password(db, vault_password):
+            raise ValueError(f"Invalid vault password: '{vault_password}'")
+
+        _, vault_id = database.retrieve_vault_salt_and_id(
+            db, encryption.generate_hash(vault_password)
+        )
+
+        if not confirm_vault_deletion(db, vault_id):
+            raise Exception(f"Vault with id={vault_id} deletion cancelled by user")
+
+        manager.destroy_vault(db, vault_id)
