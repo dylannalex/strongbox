@@ -1,6 +1,11 @@
 # StrongBox :closed_lock_with_key:	
 A secure way of storing your passwords.
 
+<p align="center">
+  <img width="490" height="350" src="../media/strongbox_demo.gif?raw=true">
+</p>
+
+
 ## :key: Why to use StrongBox?
 StrongBox makes it possible to have a random generated strong password in each website/application
 by remembering only one password, your ```vault password```. <br/> 
