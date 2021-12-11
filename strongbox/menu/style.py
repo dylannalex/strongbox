@@ -17,7 +17,6 @@ MAIN_OPTIONS = """
 VAULT_OPTIONS = """
  [1] Add account
  [2] Show website/app accounts
- [3] Show ALL websites/apps accounts
- [4] Delete account
- [5] Back
+ [3] Delete account
+ [4] Back
 """
