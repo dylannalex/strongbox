@@ -1,4 +1,5 @@
 from strongbox.menu import menu
+from strongbox.menu.screen import display_message
 
 
 def main():
@@ -6,7 +7,7 @@ def main():
         try:
             menu.main_menu()
         except Exception as error:
-            menu.display_message(str(error))
+            display_message(str(error))
 
 
 if __name__ == "__main__":
