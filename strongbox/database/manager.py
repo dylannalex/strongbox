@@ -33,7 +33,7 @@ def create_vault(db: CMySQLConnection, vault_password: str) -> None:
     encoded_salt = urandom(16)
     decoded_salt = encryption.decode_salt(encoded_salt)
     hashed_password = encryption.generate_hash(vault_password)
-    database.save_vault(db, hashed_password, decoded_salt)
+    database.create_vault(db, hashed_password, decoded_salt)
 
 
 def connect_to_vault(db: CMySQLConnection, vault_password: str) -> tuple[int, Fernet]:
@@ -50,11 +50,11 @@ def connect_to_vault(db: CMySQLConnection, vault_password: str) -> tuple[int, Fe
     return vault_id, fernet
 
 
-def save_accounts(
+def create_accounts(
     db: CMySQLConnection, accounts: list[tuple[str, str, str, str]], vault_password: str
 ) -> None:
     """
-    Saves a given list of accounts in the database. Accounts must be passed
+    Saves a given list of accounts on the database. Accounts must be passed
     as a list tuple:
     accounts = [
         ("website1", "example1@gmail.com", "username1", "password123"),
@@ -68,7 +68,7 @@ def save_accounts(
         mail = account[1]
         username = account[2]
         encrypted_password = encryption.encrypt_password(fernet, account[3])
-        database.save_account(db, name, mail, username, encrypted_password, vault_id)
+        database.create_account(db, name, mail, username, encrypted_password, vault_id)
 
 
 def destroy_vault(db, vault_id):

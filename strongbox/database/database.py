@@ -16,7 +16,7 @@ def connect_to_database() -> CMySQLConnection:
     return db
 
 
-def save_account(
+def create_account(
     db: CMySQLConnection,
     name: str,
     username: str,
@@ -63,7 +63,7 @@ def get_total_accounts(db: CMySQLConnection, vault_id: int):
     return len(retrieve_all_accounts(db, vault_id))
 
 
-def save_vault(db: CMySQLConnection, encrypted_password: str, salt: str):
+def create_vault(db: CMySQLConnection, encrypted_password: str, salt: str):
     cursor = db.cursor()
     cursor.execute(
         f"INSERT INTO {VAULT_TABLE} VALUES ('{encrypted_password}', '{salt}', 0);"

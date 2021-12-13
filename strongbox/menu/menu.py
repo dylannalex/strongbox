@@ -18,7 +18,7 @@ def vault_menu(db, fernet, vault_id) -> None:
                     continue
                 name, mail, username, password = account
                 encrypted_password = encryption.encrypt_password(fernet, password)
-                database.save_account(
+                database.create_account(
                     db, name, mail, username, encrypted_password, vault_id
                 )
 
