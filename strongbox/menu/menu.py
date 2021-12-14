@@ -48,8 +48,7 @@ def vault_menu(db, fernet, vault_id) -> None:
             screen.display_message(str(error))
 
 
-def main_menu():
-    db = database.connect_to_database()
+def main_menu(db):
     option = screen.get_option(style.MAIN_OPTIONS, settings.VALID_MAIN_OPTIONS)
     if option == 1:
         vault_password = screen.get_vault_password()
