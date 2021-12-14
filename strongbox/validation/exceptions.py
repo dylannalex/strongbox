@@ -11,3 +11,8 @@ class SpacesException(Exception):
 class EmptyStringException(Exception):
     def __init__(self, item):
         super().__init__(f"{item} cannot be empty")
+
+
+class InvalidVaultPasswordException(Exception):
+    def __init__(self, password):
+        super().__init__(f"{password}  is not a valid vault password")
