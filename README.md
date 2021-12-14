@@ -2,7 +2,7 @@
 A secure way of storing your passwords.
 
 <p align="center">
-  <img width="490" height="350" src="../media/strongbox_demo.gif?raw=true">
+  <img width="554" height="289" src="../media/strongbox_demo.gif?raw=true">
 </p>
 
 
