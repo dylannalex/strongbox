@@ -100,6 +100,11 @@ def confirm_account_deletion(account_id):
 
 ### Get user input (password, option, account, account id):
 @display_on_screen()
+def get_user_input(msg: str):
+    return input(f" {msg}: ").strip()
+
+
+@display_on_screen()
 def get_account_id() -> None:
     id = input(" Enter account id: ").strip()
     if not verifier.valid_int(id):
@@ -135,5 +140,14 @@ def get_account() -> str:
 
 @display_on_screen()
 def get_website_name() -> str:
-    print("\n Enter 'all' for retrieving all websites/apps accounts")
+    print("\n Enter 'all' for retrieving all websites/apps accounts\n")
     return input(" Enter website/app name: ").strip().lower()
+
+
+@display_on_screen()
+def get_vaults_to_merge() -> str:
+    print(" The 'weak' vault will be merged into the 'strong' vault\n")
+    weak_vault_password = input(" Enter weak vault password: ").strip()
+    strong_vault_password = input(" Enter strong vault password: ").strip()
+    destroy_weak_vault = confirm_task(f"Destroy weak vault?")
+    return strong_vault_password, weak_vault_password, destroy_weak_vault

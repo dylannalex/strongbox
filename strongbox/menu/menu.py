@@ -1,9 +1,10 @@
 from strongbox.menu import screen
-from strongbox import encryption
+from strongbox import encryption, validation
 from strongbox.database import database
 from strongbox.menu import settings
 from strongbox.menu import style
 from strongbox.database import manager
+from strongbox.validation.checker import check_vaults_passwords
 
 
 def vault_menu(db, fernet, vault_id) -> None:
@@ -60,9 +61,31 @@ def main_menu():
         vault_menu(db, fernet, vault_id)
 
     elif option == 2:
-        screen.show_vaults(db, database.retrieve_vaults(db))
+        old_vault_password = screen.get_user_input("Enter vault password")
+        check_vaults_passwords(db, old_vault_password)
+        new_vault_password = screen.get_user_input("Enter new password")
+        if not screen.confirm_task(
+            "Are you sure you want to change your vault password?"
+        ):
+            return
+        manager.change_vault_password(db, old_vault_password, new_vault_password)
 
     elif option == 3:
+        (
+            strong_vault_password,
+            weak_vault_password,
+            destroy_weak_vault,
+        ) = screen.get_vaults_to_merge()
+        check_vaults_passwords(db, strong_vault_password, weak_vault_password)
+
+        if not screen.confirm_task("Are you sure you want to merge vaults?"):
+            return
+
+        manager.merge_vaults(
+            db, strong_vault_password, weak_vault_password, destroy_weak_vault
+        )
+
+    elif option == 4:
         vault_password = screen.get_vault_password()
         if not manager.is_valid_vault_password(db, vault_password):
             raise ValueError(f"Invalid vault password: '{vault_password}'")
@@ -75,3 +98,6 @@ def main_menu():
             raise Exception(f"Vault with id={vault_id} deletion cancelled by user")
 
         manager.destroy_vault(db, vault_id)
+
+    elif option == 5:
+        screen.show_vaults(db, database.retrieve_vaults(db))

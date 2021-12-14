@@ -10,8 +10,10 @@ TITLE = r"""
 
 MAIN_OPTIONS = """
  [1] Enter vault
- [2] Show vaults
- [3] Delete vault
+ [2] Change vault password
+ [3] Merge vaults
+ [4] Delete vault
+ [5] Show vaults
 """
 
 VAULT_OPTIONS = """

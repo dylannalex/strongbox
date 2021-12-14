@@ -75,3 +75,41 @@ def destroy_vault(db, vault_id):
     database.delete_vault(db, vault_id)
     for account in database.retrieve_all_accounts(db, vault_id):
         database.delete_account(db, account[-1])
+
+
+def merge_vaults(
+    db: CMySQLConnection,
+    strong_vault_password: str,
+    weak_vault_password: str,
+    destroy_weak_vault: bool,
+):
+    """
+    Merges weak vault into the strong vault. This is done by decrypting
+    accounts stored at the weak vault, encrypting them with strong vault
+    password and storing them there.
+    """
+    # Retrieve accounts from weak vault:
+    weak_vault_id, fernet = connect_to_vault(db, weak_vault_password)
+    encrypted_accounts = database.retrieve_all_accounts(db, weak_vault_id)
+    decrypted_accounts = [
+        (
+            acc[0],
+            acc[1],
+            acc[2],
+            fernet.decrypt(bytes(acc[3], "utf-8")).decode("utf-8"),
+        )
+        for acc in encrypted_accounts
+    ]
+    # Store weak vault accounts on strong vault:
+    create_accounts(db, decrypted_accounts, strong_vault_password)
+
+    # Destroy weak vault:
+    if destroy_weak_vault:
+        destroy_vault(db, weak_vault_id)
+
+
+def change_vault_password(
+    db: CMySQLConnection, old_vault_password: str, new_vault_password: str
+):
+    create_vault(db, new_vault_password)
+    merge_vaults(db, new_vault_password, old_vault_password, True)
