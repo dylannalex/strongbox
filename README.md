@@ -7,14 +7,14 @@ A secure way of storing your passwords.
 
 
 ## :key: Why to use StrongBox?
-StrongBox makes it possible to have a random generated strong password in each website/application
+StrongBox makes it possible to have a random generated strong password on each website/application
 by remembering only one password, your ```vault password```. <br/> 
-StrongBox let you handle multiple vaults, which are uniquely identified by their password: **two vaults cannot
+StrongBox handles multiple vaults, which are uniquely identified by their password: **two vaults cannot
 have the same password**. <br/> 
 Each vault contains a list of websites/applications accounts, which have a website/app name, username, email and password.
 All these password are encrypted and can only be decrypted with the ```vault password```.
 
-***IMPORTANT: your vault key should be strong and unique. You should not store it in your computer.***
+***IMPORTANT: your vault key should be strong and unique. You should not store it on your computer.***
 
 ## :key: Installation
 Clone StrongBox repository:
