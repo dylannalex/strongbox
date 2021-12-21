@@ -5,49 +5,70 @@ from strongbox.menu import settings
 from strongbox.menu import style
 from strongbox.database import manager
 from strongbox.validation.checker import check_vaults_passwords
+from mysql.connector.errors import OperationalError
 
 
+def menu(exit_option=None):
+    """
+    This decorator let you run a function that needs to stablish
+    a connection with the database. Every time the database
+    connection is lost, wrapped_f renew the session. Any other
+    exception that occur are shown to the user.
+    """
+
+    def wrap(f):
+        def wrapped_f(*args, **kwargs):
+            db = database.connect_to_database()
+            while True:
+                try:
+                    opt = f(db, *args, **kwargs)
+                    if exit_option and exit_option == opt:
+                        return
+
+                except OperationalError:
+                    screen.display_message("MySQL connection lost. Reconnecting...")
+                    db = database.connect_to_database()
+
+                except Exception as error:
+                    screen.display_message(str(error))
+
+        return wrapped_f
+
+    return wrap
+
+
+@menu(4)
 def vault_menu(db, fernet, vault_id) -> None:
-    while True:
-        try:
-            option = screen.get_option(
-                style.VAULT_OPTIONS, settings.VALID_VAULT_OPTIONS
-            )
-            if option == 1:
-                account = screen.get_account()
-                if not account:
-                    continue
-                name, mail, username, password = account
-                encrypted_password = encryption.encrypt_password(fernet, password)
-                database.create_account(
-                    db, name, mail, username, encrypted_password, vault_id
-                )
+    option = screen.get_option(style.VAULT_OPTIONS, settings.VALID_VAULT_OPTIONS)
+    if option == 1:
+        account = screen.get_account()
+        if not account:
+            return
+        name, mail, username, password = account
+        encrypted_password = encryption.encrypt_password(fernet, password)
+        database.create_account(db, name, mail, username, encrypted_password, vault_id)
 
-            elif option == 2:
-                name = screen.get_website_name()
-                if name == "all":
-                    accounts = database.retrieve_all_accounts(db, vault_id)
-                else:
-                    accounts = database.retrieve_accounts(db, name, vault_id)
-                screen.show_accounts(fernet, accounts)
+    elif option == 2:
+        name = screen.get_website_name()
+        if name == "all":
+            accounts = database.retrieve_all_accounts(db, vault_id)
+        else:
+            accounts = database.retrieve_accounts(db, name, vault_id)
+        screen.show_accounts(fernet, accounts)
 
-            elif option == 3:
-                account_id = screen.get_account_id()
-                if not manager.is_valid_account_id(db, vault_id, account_id):
-                    raise ValueError(f"Account with id={account_id} was not found")
-                if not screen.confirm_account_deletion(account_id):
-                    raise Exception(
-                        f"Account with id={account_id} deletion cancelled by user"
-                    )
-                database.delete_account(db, account_id)
+    elif option == 3:
+        account_id = screen.get_account_id()
+        if not manager.is_valid_account_id(db, vault_id, account_id):
+            raise ValueError(f"Account with id={account_id} was not found")
+        if not screen.confirm_account_deletion(account_id):
+            raise Exception(f"Account with id={account_id} deletion cancelled by user")
+        database.delete_account(db, account_id)
 
-            elif option == 4:
-                return
-
-        except Exception as error:
-            screen.display_message(str(error))
+    elif option == 4:
+        return 4
 
 
+@menu()
 def main_menu(db):
     option = screen.get_option(style.MAIN_OPTIONS, settings.VALID_MAIN_OPTIONS)
     if option == 1:
@@ -57,7 +78,7 @@ def main_menu(db):
                 return
             manager.create_vault(db, vault_password)
         vault_id, fernet = manager.connect_to_vault(db, vault_password)
-        vault_menu(db, fernet, vault_id)
+        vault_menu(fernet, vault_id)
 
     elif option == 2:
         old_vault_password = screen.get_user_input("Enter vault password")
