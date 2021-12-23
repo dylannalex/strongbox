@@ -2,7 +2,7 @@ from strongbox.menu import menu
 from strongbox.database.database import connect_to_database
 
 
-def main():
+def main() -> None:
     menu.main_menu()
 
 

@@ -1,3 +1,4 @@
+from mysql.connector.connection_cext import CMySQLConnection
 from strongbox.database.manager import is_valid_vault_password
 from strongbox.validation import exceptions
 
@@ -5,12 +6,12 @@ from strongbox.validation import exceptions
 SPACE = " "
 
 
-def _check_passwords(password1, password2):
+def _check_passwords(password1: str, password2: str) -> None:
     if password1 != password2:
         raise exceptions.DifferentPasswordsException
 
 
-def _check_spaces(mail, username, password):
+def _check_spaces(mail: str, username: str, password: str) -> None:
     if SPACE in mail:
         raise exceptions.SpacesException("mail")
 
@@ -21,7 +22,7 @@ def _check_spaces(mail, username, password):
         raise exceptions.SpacesException("password")
 
 
-def _check_empty(name, mail, password):
+def _check_empty(name: str, mail: str, password: str) -> None:
     if len(name) == 0:
         raise exceptions.EmptyStringException("name")
 
@@ -32,13 +33,15 @@ def _check_empty(name, mail, password):
         raise exceptions.EmptyStringException("password")
 
 
-def check_account(name, mail, username, password1, password2):
+def check_account(
+    name: str, mail: str, username: str, password1: str, password2: str
+) -> None:
     _check_empty(name, mail, password1)
     _check_spaces(mail, username, password1)
     _check_passwords(password1, password2)
 
 
-def check_vaults_passwords(db, *args: str):
+def check_vaults_passwords(db: CMySQLConnection, *args: str) -> None:
     for vault_password in args:
         if not is_valid_vault_password(db, vault_password):
             raise exceptions.InvalidVaultPasswordException(vault_password)

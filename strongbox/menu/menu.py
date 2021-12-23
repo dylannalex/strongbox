@@ -1,3 +1,6 @@
+from typing import Any, Callable, Union
+from cryptography.fernet import Fernet
+from mysql.connector.connection_cext import CMySQLConnection
 from strongbox.menu import screen
 from strongbox import encryption
 from strongbox.database import database
@@ -8,7 +11,7 @@ from strongbox.validation.checker import check_vaults_passwords
 from mysql.connector.errors import OperationalError
 
 
-def menu(exit_option=None):
+def menu(exit_option: Union[int, None] = None) -> Callable:
     """
     This decorator let you run a function that needs to stablish
     a connection with the database. Every time the database
@@ -16,8 +19,8 @@ def menu(exit_option=None):
     exception that occur are shown to the user.
     """
 
-    def wrap(f):
-        def wrapped_f(*args, **kwargs):
+    def wrap(f: Callable) -> Callable:
+        def wrapped_f(*args: Any, **kwargs: Any) -> None:
             db = database.connect_to_database()
             while True:
                 try:
@@ -38,7 +41,7 @@ def menu(exit_option=None):
 
 
 @menu(4)
-def vault_menu(db, fernet, vault_id) -> None:
+def vault_menu(db: CMySQLConnection, fernet: Fernet, vault_id: int) -> None:
     option = screen.get_option(style.VAULT_OPTIONS, settings.VALID_VAULT_OPTIONS)
     if option == 1:
         account = screen.get_account()
@@ -69,7 +72,7 @@ def vault_menu(db, fernet, vault_id) -> None:
 
 
 @menu()
-def main_menu(db):
+def main_menu(db: CMySQLConnection) -> None:
     option = screen.get_option(style.MAIN_OPTIONS, settings.VALID_MAIN_OPTIONS)
     if option == 1:
         vault_password = screen.get_vault_password()

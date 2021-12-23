@@ -5,7 +5,7 @@ from strongbox import encryption
 from strongbox.database import database
 
 
-def is_valid_account_id(db, vault_id, account_id) -> bool:
+def is_valid_account_id(db: CMySQLConnection, vault_id: int, account_id: int) -> bool:
     """
     Returns True if matches the given account_id with a created
     account, else returns False.
@@ -71,7 +71,7 @@ def create_accounts(
         database.create_account(db, name, mail, username, encrypted_password, vault_id)
 
 
-def destroy_vault(db, vault_id):
+def destroy_vault(db: CMySQLConnection, vault_id: int) -> None:
     database.delete_vault(db, vault_id)
     for account in database.retrieve_all_accounts(db, vault_id):
         database.delete_account(db, account[-1])
@@ -82,7 +82,7 @@ def merge_vaults(
     strong_vault_password: str,
     weak_vault_password: str,
     destroy_weak_vault: bool,
-):
+) -> None:
     """
     Merges weak vault into the strong vault. This is done by decrypting
     accounts stored at the weak vault, encrypting them with strong vault
@@ -110,6 +110,6 @@ def merge_vaults(
 
 def change_vault_password(
     db: CMySQLConnection, old_vault_password: str, new_vault_password: str
-):
+) -> None:
     create_vault(db, new_vault_password)
     merge_vaults(db, new_vault_password, old_vault_password, True)

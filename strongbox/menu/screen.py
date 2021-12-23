@@ -1,5 +1,8 @@
 from os import system
 from msvcrt import getwch
+from typing import Any, Callable
+from cryptography.fernet import Fernet
+from mysql.connector.connection_cext import CMySQLConnection
 from prettytable import PrettyTable
 from strongbox.database import database
 from strongbox.menu import style
@@ -8,7 +11,7 @@ from strongbox.validation import checker
 
 
 ### Display information on screen:
-def mask_input(prompt="", mask="*"):
+def mask_input(prompt: str = "", mask: str = "*") -> None:
     print(prompt, end="", flush=True)
     response = ""
     while (char := getwch()) != "\r":
@@ -25,9 +28,11 @@ def mask_input(prompt="", mask="*"):
     return response
 
 
-def display_on_screen(show_error_message=True, force_input=True):
-    def wrap(f):
-        def wrapped_f(*args, **kwargs):
+def display_on_screen(
+    show_error_message: bool = True, force_input: bool = True
+) -> Callable:
+    def wrap(f: Callable) -> Callable:
+        def wrapped_f(*args: Any, **kwargs: Any) -> Any:
             while True:
                 system("cls")
                 print(style.TITLE)
@@ -56,7 +61,9 @@ def display_message(msg: str) -> None:
     wait()
 
 
-def show_accounts(fernet, accounts) -> None:
+def show_accounts(
+    fernet: Fernet, accounts: list[tuple[str, str, str, str, int, int]]
+) -> None:
     accounts_table = PrettyTable()
     accounts_table.field_names = [
         "Website/App name",
@@ -76,7 +83,7 @@ def show_accounts(fernet, accounts) -> None:
     display_message(str(accounts_table))
 
 
-def show_vaults(db, vaults) -> None:
+def show_vaults(db: CMySQLConnection, vaults: list[tuple[str, str, int]]) -> None:
     vaults_table = PrettyTable()
     vaults_table.field_names = ["Id", "Total accounts", "Hashed password"]
     for vault in vaults:
@@ -99,7 +106,7 @@ def confirm_task(confirmation_message: str) -> bool:
         raise ValueError()
 
 
-def confirm_vault_creation(password) -> bool:
+def confirm_vault_creation(password: str) -> bool:
     hidden_password = "*" * len(password)
     show_password = confirm_task(
         f"No vault with password '{hidden_password}' found. Show entered password?"
@@ -110,14 +117,14 @@ def confirm_vault_creation(password) -> bool:
         return confirm_task(f"Create new vault with password '{hidden_password}'?")
 
 
-def confirm_vault_deletion(db, vault_id):
+def confirm_vault_deletion(db: CMySQLConnection, vault_id: int) -> bool:
     vault_accounts = database.retrieve_all_accounts(db, vault_id)
     return confirm_task(
         f"Are you sure you want to delete vault with {len(vault_accounts)} accounts?"
     )
 
 
-def confirm_account_deletion(account_id):
+def confirm_account_deletion(account_id: int) -> bool:
     return confirm_task(
         f"Are you sure you want to delete account with id={account_id}?"
     )
@@ -125,7 +132,7 @@ def confirm_account_deletion(account_id):
 
 ### Get user input (password, option, account, account id):
 @display_on_screen()
-def get_user_input(msg: str):
+def get_user_input(msg: str) -> str:
     return input(f" {msg}: ").strip()
 
 

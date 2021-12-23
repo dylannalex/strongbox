@@ -1,4 +1,4 @@
-def valid_int(string):
+def valid_int(string: str) -> bool:
     try:
         int(string)
         return True
@@ -6,7 +6,7 @@ def valid_int(string):
         return False
 
 
-def valid_option(option: str, valid_options: list[int]):
+def valid_option(option: str, valid_options: list[int]) -> bool:
     if not valid_int(option):
         return False
 

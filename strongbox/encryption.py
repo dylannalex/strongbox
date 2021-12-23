@@ -14,7 +14,7 @@ def generate_hash(vault_password: str) -> str:
     return sha256(vault_password.encode()).hexdigest()
 
 
-def generate_key(password, salt):
+def generate_key(password: str, salt: bytes) -> bytes:
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
