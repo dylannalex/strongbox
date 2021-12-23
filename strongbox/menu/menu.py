@@ -1,5 +1,5 @@
 from strongbox.menu import screen
-from strongbox import encryption, validation
+from strongbox import encryption
 from strongbox.database import database
 from strongbox.menu import settings
 from strongbox.menu import style
