@@ -1,4 +1,5 @@
 from os import system
+from msvcrt import getwch
 from prettytable import PrettyTable
 from strongbox.database import database
 from strongbox.menu import style
@@ -7,6 +8,23 @@ from strongbox.validation import checker
 
 
 ### Display information on screen:
+def mask_input(prompt="", mask="*"):
+    print(prompt, end="", flush=True)
+    response = ""
+    while (char := getwch()) != "\r":
+        if char == "\x08":
+            if not len(response):
+                continue
+
+            print("\b \b", end="", flush=True)
+            response = response[:-1]
+        else:
+            response += char
+            print(mask, end="", flush=True)
+    print("")
+    return response
+
+
 def display_on_screen(show_error_message=True, force_input=True):
     def wrap(f):
         def wrapped_f(*args, **kwargs):
@@ -82,7 +100,14 @@ def confirm_task(confirmation_message: str) -> bool:
 
 
 def confirm_vault_creation(password) -> bool:
-    return confirm_task(f"No vault with password '{password}' found. Create new vault?")
+    hidden_password = "*" * len(password)
+    show_password = confirm_task(
+        f"No vault with password '{hidden_password}' found. Show entered password?"
+    )
+    if show_password:
+        return confirm_task(f"Entered password is '{password}'. Create new vault?")
+    else:
+        return confirm_task(f"Create new vault with password '{hidden_password}'?")
 
 
 def confirm_vault_deletion(db, vault_id):
@@ -114,7 +139,7 @@ def get_account_id() -> None:
 
 @display_on_screen()
 def get_vault_password() -> None:
-    return input(" Enter vault password: ").strip()
+    return mask_input(" Enter vault password: ").strip()
 
 
 @display_on_screen(False)
@@ -132,8 +157,8 @@ def get_account() -> str:
     name = input(" Website/App name:\t").strip().lower()
     username = input(" Username:\t\t").strip().lower()
     mail = input(" Mail:\t\t\t").strip().lower()
-    password1 = input(" Password:\t\t").strip()
-    password2 = input(" Re-enter password:\t").strip()
+    password1 = mask_input(" Password:\t\t").strip()
+    password2 = mask_input(" Re-enter password:\t").strip()
     checker.check_account(name, mail, username, password1, password2)
     return name, mail, username, password1
 
@@ -147,7 +172,7 @@ def get_website_name() -> str:
 @display_on_screen()
 def get_vaults_to_merge() -> str:
     print(" The 'weak' vault will be merged into the 'strong' vault\n")
-    weak_vault_password = input(" Enter weak vault password: ").strip()
-    strong_vault_password = input(" Enter strong vault password: ").strip()
+    weak_vault_password = mask_input(" Enter weak vault password: ").strip()
+    strong_vault_password = mask_input(" Enter strong vault password: ").strip()
     destroy_weak_vault = confirm_task(f"Destroy weak vault?")
     return strong_vault_password, weak_vault_password, destroy_weak_vault
