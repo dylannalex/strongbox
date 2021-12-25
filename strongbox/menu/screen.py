@@ -164,8 +164,13 @@ def get_account() -> str:
     name = input(" Website/App name:\t").strip().lower()
     username = input(" Username:\t\t").strip().lower()
     mail = input(" Mail:\t\t\t").strip().lower()
-    password1 = mask_input(" Password:\t\t").strip()
-    password2 = mask_input(" Re-enter password:\t").strip()
+    hide_password = input(" Hide password (y/n):\t")
+    if hide_password == "n":
+        password1 = input(" Password:\t\t").strip()
+        password2 = input(" Re-enter password:\t").strip()
+    else:
+        password1 = mask_input(" Password:\t\t").strip()
+        password2 = mask_input(" Re-enter password:\t").strip()
     checker.check_account(name, mail, username, password1, password2)
     return name, mail, username, password1
 
