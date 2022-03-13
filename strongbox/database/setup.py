@@ -1,8 +1,8 @@
-from mysql.connector.connection_cext import CMySQLConnection
+from mysql.connector.connection import MySQLConnection
 from strongbox.database.settings import ACCOUNT_TABLE, VAULT_TABLE
 
 
-def create_tables(db: CMySQLConnection) -> None:
+def create_tables(db: MySQLConnection) -> None:
     cursor = db.cursor()
     # Create account table:
     cursor.execute(

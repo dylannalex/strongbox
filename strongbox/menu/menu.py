@@ -1,6 +1,6 @@
 from typing import Any, Callable, Union
 from cryptography.fernet import Fernet
-from mysql.connector.connection_cext import CMySQLConnection
+from mysql.connector.connection import MySQLConnection
 from strongbox.menu import screen
 from strongbox import encryption
 from strongbox.database import database
@@ -41,7 +41,7 @@ def menu(exit_option: Union[int, None] = None) -> Callable:
 
 
 @menu(4)
-def vault_menu(db: CMySQLConnection, fernet: Fernet, vault_id: int) -> None:
+def vault_menu(db: MySQLConnection, fernet: Fernet, vault_id: int) -> None:
     option = screen.get_option(style.VAULT_OPTIONS, settings.VALID_VAULT_OPTIONS)
     if option == 1:
         account = screen.get_account()
@@ -72,7 +72,7 @@ def vault_menu(db: CMySQLConnection, fernet: Fernet, vault_id: int) -> None:
 
 
 @menu()
-def main_menu(db: CMySQLConnection) -> None:
+def main_menu(db: MySQLConnection) -> None:
     option = screen.get_option(style.MAIN_OPTIONS, settings.VALID_MAIN_OPTIONS)
     if option == 1:
         vault_password = screen.get_vault_password()

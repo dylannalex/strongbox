@@ -2,7 +2,7 @@ from os import system
 from msvcrt import getwch
 from typing import Any, Callable
 from cryptography.fernet import Fernet
-from mysql.connector.connection_cext import CMySQLConnection
+from mysql.connector.connection import MySQLConnection
 from prettytable import PrettyTable
 from strongbox.database import database
 from strongbox.menu import style
@@ -83,7 +83,7 @@ def show_accounts(
     display_message(str(accounts_table))
 
 
-def show_vaults(db: CMySQLConnection, vaults: list[tuple[str, str, int]]) -> None:
+def show_vaults(db: MySQLConnection, vaults: list[tuple[str, str, int]]) -> None:
     vaults_table = PrettyTable()
     vaults_table.field_names = ["Id", "Total accounts", "Hashed password"]
     for vault in vaults:
@@ -117,7 +117,7 @@ def confirm_vault_creation(password: str) -> bool:
         return confirm_task(f"Create new vault with password '{hidden_password}'?")
 
 
-def confirm_vault_deletion(db: CMySQLConnection, vault_id: int) -> bool:
+def confirm_vault_deletion(db: MySQLConnection, vault_id: int) -> bool:
     vault_accounts = database.retrieve_all_accounts(db, vault_id)
     return confirm_task(
         f"Are you sure you want to delete vault with {len(vault_accounts)} accounts?"

@@ -1,11 +1,11 @@
 from os import urandom
 from cryptography.fernet import Fernet
-from mysql.connector.connection_cext import CMySQLConnection
+from mysql.connector.connection import MySQLConnection
 from strongbox import encryption
 from strongbox.database import database
 
 
-def is_valid_account_id(db: CMySQLConnection, vault_id: int, account_id: int) -> bool:
+def is_valid_account_id(db: MySQLConnection, vault_id: int, account_id: int) -> bool:
     """
     Returns True if matches the given account_id with a created
     account, else returns False.
@@ -16,7 +16,7 @@ def is_valid_account_id(db: CMySQLConnection, vault_id: int, account_id: int) ->
     return False
 
 
-def is_valid_vault_password(db: CMySQLConnection, vault_password: str) -> bool:
+def is_valid_vault_password(db: MySQLConnection, vault_password: str) -> bool:
     """
     Returns True if matches the given vault_password with a created
     vault, else returns False.
@@ -29,14 +29,14 @@ def is_valid_vault_password(db: CMySQLConnection, vault_password: str) -> bool:
     return False
 
 
-def create_vault(db: CMySQLConnection, vault_password: str) -> None:
+def create_vault(db: MySQLConnection, vault_password: str) -> None:
     encoded_salt = urandom(16)
     decoded_salt = encryption.decode_salt(encoded_salt)
     hashed_password = encryption.generate_hash(vault_password)
     database.create_vault(db, hashed_password, decoded_salt)
 
 
-def connect_to_vault(db: CMySQLConnection, vault_password: str) -> tuple[int, Fernet]:
+def connect_to_vault(db: MySQLConnection, vault_password: str) -> tuple[int, Fernet]:
     """
     Given the database and a vault password, returns the vault id and a fernet
     object generating with the corresponding vault key (generated from vault
@@ -51,7 +51,7 @@ def connect_to_vault(db: CMySQLConnection, vault_password: str) -> tuple[int, Fe
 
 
 def create_accounts(
-    db: CMySQLConnection, accounts: list[tuple[str, str, str, str]], vault_password: str
+    db: MySQLConnection, accounts: list[tuple[str, str, str, str]], vault_password: str
 ) -> None:
     """
     Saves a given list of accounts on the database. Accounts must be passed
@@ -71,14 +71,14 @@ def create_accounts(
         database.create_account(db, name, mail, username, encrypted_password, vault_id)
 
 
-def destroy_vault(db: CMySQLConnection, vault_id: int) -> None:
+def destroy_vault(db: MySQLConnection, vault_id: int) -> None:
     database.delete_vault(db, vault_id)
     for account in database.retrieve_all_accounts(db, vault_id):
         database.delete_account(db, account[-1])
 
 
 def merge_vaults(
-    db: CMySQLConnection,
+    db: MySQLConnection,
     strong_vault_password: str,
     weak_vault_password: str,
     destroy_weak_vault: bool,
@@ -109,7 +109,7 @@ def merge_vaults(
 
 
 def change_vault_password(
-    db: CMySQLConnection, old_vault_password: str, new_vault_password: str
+    db: MySQLConnection, old_vault_password: str, new_vault_password: str
 ) -> None:
     create_vault(db, new_vault_password)
     merge_vaults(db, new_vault_password, old_vault_password, True)

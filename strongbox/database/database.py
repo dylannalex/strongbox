@@ -1,11 +1,11 @@
 from urllib.parse import urlparse
 import mysql.connector
-from mysql.connector.connection_cext import CMySQLConnection
+from mysql.connector.connection import MySQLConnection
 from strongbox.database.settings import DATABASE_URL, VAULT_TABLE
 from strongbox.database.settings import ACCOUNT_TABLE
 
 
-def connect_to_database() -> CMySQLConnection:
+def connect_to_database() -> MySQLConnection:
     dbc = urlparse(DATABASE_URL)
     db = mysql.connector.connect(
         host=dbc.hostname,
@@ -17,7 +17,7 @@ def connect_to_database() -> CMySQLConnection:
 
 
 def create_account(
-    db: CMySQLConnection,
+    db: MySQLConnection,
     name: str,
     username: str,
     mail: str,
@@ -34,7 +34,7 @@ def create_account(
 
 
 def retrieve_all_accounts(
-    db: CMySQLConnection, vault_id: int
+    db: MySQLConnection, vault_id: int
 ) -> list[tuple[str, str, str, str, int, int]]:
     """
     Returns all the accounts from every website/app name.
@@ -45,7 +45,7 @@ def retrieve_all_accounts(
 
 
 def retrieve_accounts(
-    db: CMySQLConnection, name: str, vault_id: int
+    db: MySQLConnection, name: str, vault_id: int
 ) -> list[tuple[str, str, str, str, int, int]]:
     """
     Returns all the accounts from the given website/app name.
@@ -57,17 +57,17 @@ def retrieve_accounts(
     return tuple([account for account in cursor])
 
 
-def delete_account(db: CMySQLConnection, account_id: int) -> None:
+def delete_account(db: MySQLConnection, account_id: int) -> None:
     cursor = db.cursor()
     cursor.execute(f"DELETE FROM {ACCOUNT_TABLE} WHERE account_id='{account_id}';")
     db.commit()
 
 
-def get_total_accounts(db: CMySQLConnection, vault_id: int) -> int:
+def get_total_accounts(db: MySQLConnection, vault_id: int) -> int:
     return len(retrieve_all_accounts(db, vault_id))
 
 
-def create_vault(db: CMySQLConnection, encrypted_password: str, salt: str) -> None:
+def create_vault(db: MySQLConnection, encrypted_password: str, salt: str) -> None:
     cursor = db.cursor()
     cursor.execute(
         f"INSERT INTO {VAULT_TABLE} VALUES ('{encrypted_password}', '{salt}', 0);"
@@ -75,14 +75,14 @@ def create_vault(db: CMySQLConnection, encrypted_password: str, salt: str) -> No
     db.commit()
 
 
-def retrieve_vaults(db: CMySQLConnection) -> list[tuple[str, str, int]]:
+def retrieve_vaults(db: MySQLConnection) -> list[tuple[str, str, int]]:
     cursor = db.cursor()
     cursor.execute(f"SELECT * FROM {VAULT_TABLE};")
     return tuple([account for account in cursor])
 
 
 def retrieve_vault_salt_and_id(
-    db: CMySQLConnection, hashed_password: str
+    db: MySQLConnection, hashed_password: str
 ) -> tuple[str, int]:
     """
     Returns the salt and id of a vault given it's password.
@@ -97,7 +97,7 @@ def retrieve_vault_salt_and_id(
         return (None, None)
 
 
-def delete_vault(db: CMySQLConnection, vault_id: int) -> None:
+def delete_vault(db: MySQLConnection, vault_id: int) -> None:
     cursor = db.cursor()
     cursor.execute(f"DELETE FROM {VAULT_TABLE} WHERE id='{vault_id}';")
     db.commit()
