@@ -8,30 +8,21 @@ from strongbox.menu import settings
 from strongbox.menu import style
 from strongbox.database import manager
 from strongbox.validation.checker import check_vaults_passwords
-from mysql.connector.errors import OperationalError
 
 
 def menu(exit_option: Union[int, None] = None) -> Callable:
     """
-    This decorator let you run a function that needs to stablish
-    a connection with the database. Every time the database
-    connection is lost, wrapped_f renew the session. Any other
-    exception that occur are shown to the user.
+    Decorator for menu functions that have to run in a
+    loop until an exit option is selected.
     """
 
     def wrap(f: Callable) -> Callable:
-        def wrapped_f(*args: Any, **kwargs: Any) -> None:
-            db = database.connect_to_database()
+        def wrapped_f(db, *args: Any, **kwargs: Any) -> None:
             while True:
                 try:
                     opt = f(db, *args, **kwargs)
                     if exit_option and exit_option == opt:
                         return
-
-                except OperationalError:
-                    screen.display_message("MySQL connection lost. Reconnecting...")
-                    db = database.connect_to_database()
-
                 except Exception as error:
                     screen.display_message(str(error))
 
@@ -81,7 +72,7 @@ def main_menu(db: MySQLConnection) -> None:
                 return
             manager.create_vault(db, vault_password)
         vault_id, fernet = manager.connect_to_vault(db, vault_password)
-        vault_menu(fernet, vault_id)
+        vault_menu(db, fernet, vault_id)
 
     elif option == 2:
         old_vault_password = screen.get_user_input("Enter vault password")

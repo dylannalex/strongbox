@@ -3,7 +3,8 @@ from strongbox.database.database import connect_to_database
 
 
 def main() -> None:
-    menu.main_menu()
+    db = connect_to_database()
+    menu.main_menu(db)
 
 
 if __name__ == "__main__":

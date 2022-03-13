@@ -1,8 +1,10 @@
 from urllib.parse import urlparse
 import mysql.connector
 from mysql.connector.connection import MySQLConnection
+from mysql.connector.errors import OperationalError
 from strongbox.database.settings import DATABASE_URL, VAULT_TABLE
 from strongbox.database.settings import ACCOUNT_TABLE
+from typing import Callable
 
 
 def connect_to_database() -> MySQLConnection:
@@ -16,6 +18,18 @@ def connect_to_database() -> MySQLConnection:
     return db
 
 
+def database_access(f: Callable):
+    def wrapper(db: MySQLConnection, *args):
+        while True:
+            try:
+                return f(db, *args)
+            except OperationalError:
+                db.reconnect()
+
+    return wrapper
+
+
+@database_access
 def create_account(
     db: MySQLConnection,
     name: str,
@@ -33,6 +47,7 @@ def create_account(
     db.commit()
 
 
+@database_access
 def retrieve_all_accounts(
     db: MySQLConnection, vault_id: int
 ) -> list[tuple[str, str, str, str, int, int]]:
@@ -44,6 +59,7 @@ def retrieve_all_accounts(
     return tuple([account for account in cursor])
 
 
+@database_access
 def retrieve_accounts(
     db: MySQLConnection, name: str, vault_id: int
 ) -> list[tuple[str, str, str, str, int, int]]:
@@ -57,16 +73,19 @@ def retrieve_accounts(
     return tuple([account for account in cursor])
 
 
+@database_access
 def delete_account(db: MySQLConnection, account_id: int) -> None:
     cursor = db.cursor()
     cursor.execute(f"DELETE FROM {ACCOUNT_TABLE} WHERE account_id='{account_id}';")
     db.commit()
 
 
+@database_access
 def get_total_accounts(db: MySQLConnection, vault_id: int) -> int:
     return len(retrieve_all_accounts(db, vault_id))
 
 
+@database_access
 def create_vault(db: MySQLConnection, encrypted_password: str, salt: str) -> None:
     cursor = db.cursor()
     cursor.execute(
@@ -75,12 +94,14 @@ def create_vault(db: MySQLConnection, encrypted_password: str, salt: str) -> Non
     db.commit()
 
 
+@database_access
 def retrieve_vaults(db: MySQLConnection) -> list[tuple[str, str, int]]:
     cursor = db.cursor()
     cursor.execute(f"SELECT * FROM {VAULT_TABLE};")
     return tuple([account for account in cursor])
 
 
+@database_access
 def retrieve_vault_salt_and_id(
     db: MySQLConnection, hashed_password: str
 ) -> tuple[str, int]:
@@ -97,6 +118,7 @@ def retrieve_vault_salt_and_id(
         return (None, None)
 
 
+@database_access
 def delete_vault(db: MySQLConnection, vault_id: int) -> None:
     cursor = db.cursor()
     cursor.execute(f"DELETE FROM {VAULT_TABLE} WHERE id='{vault_id}';")
