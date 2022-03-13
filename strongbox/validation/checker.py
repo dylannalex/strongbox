@@ -1,4 +1,4 @@
-from mysql.connector.connection_cext import CMySQLConnection
+from mysql.connector.connection import MySQLConnection
 from strongbox.database.manager import is_valid_vault_password
 from strongbox.validation import exceptions
 
@@ -41,7 +41,7 @@ def check_account(
     _check_passwords(password1, password2)
 
 
-def check_vaults_passwords(db: CMySQLConnection, *args: str) -> None:
+def check_vaults_passwords(db: MySQLConnection, *args: str) -> None:
     for vault_password in args:
         if not is_valid_vault_password(db, vault_password):
             raise exceptions.InvalidVaultPasswordException(vault_password)
