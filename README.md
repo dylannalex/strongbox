@@ -16,6 +16,9 @@ All these password are encrypted and can only be decrypted with the ```vault pas
 
 ***IMPORTANT: your vault key should be strong and unique. You should not store it on your computer.***
 
+Check out [SECURITY.md](https://github.com/dylannalex/strongbox/blob/master/SECURITY.md) file to learn more
+about StrongBox security system.
+
 ## :key: Installation
 Clone StrongBox repository:
 ```
